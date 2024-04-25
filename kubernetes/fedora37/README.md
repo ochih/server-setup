@@ -1,6 +1,6 @@
 # Installing Harbor and Kubernetes Cluster on Fedora37
 
-Proxy 経由でインターネット疎通できる環境に以下を構築する。OSは全て Fedora37 を用いる。 \
+インターネット疎通できる環境に以下を構築する。OSは全て Fedora37 を用いる。 \
 構築作業は以下順番で行うこと。
 
 1. [管理クライアント](10-management.md)
