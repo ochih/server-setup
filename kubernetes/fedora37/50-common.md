@@ -156,61 +156,6 @@
     Address: 192.168.14.10
     ```
 
-## Fedora の Proxy 設定
-
-- Proxy サーバを設定する
-  ```bash
-  cat <<EOF >> /etc/environment
-  export http_proxy=http://${proxy_ip_port}/
-  export HTTP_PROXY=http://${proxy_ip_port}/
-  
-  export https_proxy=http://${proxy_ip_port}/
-  export HTTPS_PROXY=http://${proxy_ip_port}/
-  
-  export no_proxy=localhost,127.0.0.1,${k8s_vip_ip},${k8s_vip_hn},${k8s_cp01_ip},${k8s_cp02_ip},${k8s_cp03_ip},${k8s_worker01_ip},${k8s_worker02_ip},${harbor_ip},${harbor_fqdn},${management_nw},10.96.0.0/12,10.20.0.0/16,${k8s_vip_hs},*.svc
-  export NO_PROXY=localhost,127.0.0.1,${k8s_vip_ip},${k8s_vip_hn},${k8s_cp01_ip},${k8s_cp02_ip},${k8s_cp03_ip},${k8s_worker01_ip},${k8s_worker02_ip},${harbor_ip},${harbor_fqdn},${management_nw},10.96.0.0/12,10.20.0.0/16,${k8s_vip_hs},*.svc
-  EOF
-  
-  cat /etc/environment
-  source /etc/environment
-  ```
-
-## dnf(yum) のリポジトリ指定
-
-- Proxy Server の宛先許可リストを固定するため、dnf のリポジトリ参照先を mirror リストから `riken.jp` に変更する。Proxy Server の宛先許可リストを固定する必要が無いのであれば実施不要。
-
-  ```bash
-  cd /etc/
-  
-  # backup
-  ls -ld yum.repos.d*
-    # -> yum.repos.d/ が存在すること
-  
-  cp -pr yum.repos.d yum.repos.d.bak
-  ls -ld yum.repos.d*
-    # -> yum.repos.d/ と yum.repos.d.bak/ が存在すること
-  
-  # 変更
-  cd yum.repos.d
-  sed -i -e "s/^metalink=/#metalink=/g" ./*
-  sed -i -e "s,^#baseurl=http://download.example/pub/fedora/linux,baseurl=https://ftp.riken.jp/Linux/fedora,g" ./*
-  sed -i -e "s/^enabled=1/enabled=0/g" fedora-cisco-openh264.repo
-  
-  # 差分出力（TerminalLogに記録するだけ。中身を読む必要はない）
-  diff -u ../yum.repos.d.bak/ .
-  
-  # 動作確認
-  dnf check-update
-  ```
-
-  - 確認観点：実行結果の冒頭に以下と同様の内容が出力され、リポジトリから情報を取得できていることを確認する。
-
-    ```text
-    Fedora 37 - x86_64                        32 MB/s |  82 MB     00:02
-    Fedora Modular 37 - x86_64               7.1 MB/s | 3.8 MB     00:00
-    Fedora 37 - x86_64 - Updates              18 MB/s |  40 MB     00:02
-    Fedora Modular 37 - x86_64 - Updates     1.7 MB/s | 2.9 MB     00:01
-    ```
 
 ## package update
 
@@ -352,14 +297,6 @@
   shutdown -r now
   ```
 
-- Proxy 設定確認
-
-  ```bash
-  env | grep -i proxy | sort
-  ```
-
-  - 確認観点：/etc/environment に設定した Proxy の設定が反映されていること
-
 - SELinux 確認
 
   ```bash
@@ -415,43 +352,8 @@
     ```
 
 
-- Proxy 設定前確認 \
-  docker の proxy を設定する前に dockerhub からのコンテナイメージ取得に失敗することを確認する。
-
-  ```bash
-  docker run --rm hello-world
-  ```
-
-  - 確認観点:エラーメッセージが出力されること
-
-- Proxy 設定 \
-  docker の proxy を設定する。
-
-  ```bash
-  mkdir -p /etc/systemd/system/docker.service.d
-
-  cat <<EOF > /etc/systemd/system/docker.service.d/http-proxy.conf
-  [Service]
-  Environment="HTTP_PROXY=${HTTP_PROXY}"
-  Environment="HTTPS_PROXY=${HTTPS_PROXY}"
-  Environment="NO_PROXY=${NO_PROXY}"
-  EOF
-  
-  cat /etc/systemd/system/docker.service.d/http-proxy.conf
-  systemctl daemon-reload
-  systemctl restart docker
-  systemctl status docker --no-pager
-  systemctl show --property=Environment docker --no-pager
-  ```
-
-  - 確認観点：設定した Proxy の設定が出力されること
-    ```text
-    <出力例>
-    Environment=HTTP_PROXY=http://192.168.13.2:8080 HTTPS_PROXY=http://192.168.13.2:8080 "NO_PROXY=localhost,127.0.0.1,192.168.14.10,192.168.14.11,192.168.14.12,192.168.14.13,192.168.14.21,192.168.14.22,192.168.14.0/24,10.96.0.0/12,10.20.0.0/16,vip-k8s-master,*.svc"
-    ```
-
 - 動作確認 \
-  Proxy 経由で Docker Hub からコンテナイメージを取得できる環境では以下が実行出来ることを確認する。
+  Docker Hub からコンテナイメージを取得できることを確認する。
 
   ```bash
   docker run --rm hello-world
