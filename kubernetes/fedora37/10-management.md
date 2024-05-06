@@ -70,13 +70,3 @@ CLI の作業は全て `root` ユーザで作業を実施すること。
   - ![img](img/10_GUI_Login.png)
   - ![img](img/11_GUI_Desktop.png)
 
-## Firefox Proxy 設定
-
-- Firefox の proxy を設定する
-  - HTTPプロキシー: Proxy サーバを指定
-  - このプロキシーを HTTPS でも使用する にチェック
-  - プロキシーなしで接続: 管理NW の NW アドレス, Harbor の FQDN を指定
-    - 例：192.168.14.0/24,harbor2.home.ndeguchi.com
-
-  ![img](img/30_firefox_proxy_settings.png)
-
